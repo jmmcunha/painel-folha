@@ -8,10 +8,10 @@ window.PF_CONFIG = {
      Configurações do projeto > Seus aplicativos. Enquanto estiver null, o painel abre sem login. */
   firebase: null,
   /* firebase: {
-    apiKey: 'COLE_AQUI',
-    authDomain: 'seu-projeto.firebaseapp.com',
-    projectId: 'seu-projeto',
-    appId: 'COLE_AQUI',
+    apiKey: 'AIzaSyAcDY06uTPWGITASl3Uud4DDVn213RBe90',
+    authDomain: 'projeto-folha.firebaseapp.com',
+    projectId: 'projeto-folha',
+    appId: '1:494657843103:web:5dfc10a0ebe12d5c4797aa',
   }, */
 
   /* Tela de perfil e diversidade. Use false para ocultá-la. */
