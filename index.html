@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="no-referrer">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src https://identitytoolkit.googleapis.com https://securetoken.googleapis.com; object-src 'none'; frame-src 'none'; base-uri 'self'; form-action 'none'">
+<title>Painel da Folha</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+
+<div id="carregando" class="tela-cheia"><p>Carregando…</p></div>
+
+<section id="login" class="tela-cheia" hidden>
+  <form id="login-form" class="login-cx" autocomplete="on">
+    <h1>Painel da Folha</h1>
+    <p class="mudo">Acesso restrito. Entre com a conta criada pelo administrador.</p>
+    <label class="campo"><span>E-mail</span><input type="email" id="login-email" autocomplete="username" required></label>
+    <label class="campo"><span>Senha</span><input type="password" id="login-senha" autocomplete="current-password" required></label>
+    <p id="login-msg" class="aviso erro" role="alert" hidden></p>
+    <button type="submit" class="btn btn-primario" id="login-entrar">Entrar</button>
+    <button type="button" class="btn btn-texto" id="login-esqueci">Esqueci a senha</button>
+  </form>
+</section>
+
+<div id="app" hidden>
+  <header class="appbar">
+    <button type="button" class="btn btn-texto so-estreito" id="btn-menu" aria-label="Abrir ou fechar o menu">☰</button>
+    <div class="marca"><span id="app-titulo">PAINEL DA FOLHA</span><span id="app-sub" class="mudo"></span></div>
+    <div class="appbar-dir">
+      <span id="base-info" class="mudo"></span>
+      <span id="sem-login" class="etq" hidden title="O login pelo Firebase ainda não foi configurado em js/config.js">Sem login configurado</span>
+      <button type="button" class="btn btn-contorno btn-p" id="btn-ocultar" aria-pressed="false" hidden>Ocultar nomes</button>
+      <button type="button" class="btn btn-primario btn-p" data-acao="carregar">Atualizar base</button>
+      <span id="usuario" hidden><span id="usuario-email" class="mudo"></span> <button type="button" class="btn btn-texto btn-p" id="btn-sair">Sair</button></span>
+    </div>
+  </header>
+  <nav class="gaveta" id="menu" aria-label="Telas do painel"></nav>
+  <main>
+    <h2 id="titulo-tela"></h2>
+    <div class="filtros" id="filtros" hidden></div>
+    <div id="tela"></div>
+    <footer class="rodape mudo">A folha é lida e calculada neste navegador. Nenhum dado do arquivo é enviado ou gravado fora deste computador.</footer>
+  </main>
+</div>
+
+<div id="ocupado" hidden><div class="ocupado-cx"><div class="giro" aria-hidden="true"></div><p>Lendo…</p></div></div>
+<input type="file" id="arquivos" multiple accept=".xlsx,.xlsm,.csv,.txt" hidden>
+
+<script src="vendor/fflate.js"></script>
+<script src="vendor/apexcharts.min.js"></script>
+<script src="vendor/firebase-app-compat.js"></script>
+<script src="vendor/firebase-auth-compat.js"></script>
+<script src="js/config.js"></script>
+<script src="js/leitor.js"></script>
+<script src="js/dados.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/telas1.js"></script>
+<script src="js/telas2.js"></script>
+<script src="js/telas3.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
