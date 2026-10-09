@@ -3,16 +3,13 @@ window.PF_CONFIG = {
   titulo: 'Painel da Folha',
   subtitulo: 'Gestão e acompanhamento da folha de pagamento',
 
-  /* Login pelo Firebase Authentication (e-mail e senha).
-     Cole aqui a configuração do aplicativo Web, obtida no console do Firebase em
-     Configurações do projeto > Seus aplicativos. Enquanto estiver null, o painel abre sem login. */
-  firebase: null,
-  /* firebase: {
+  /* Login pelo Firebase Authentication (e-mail e senha). */
+  firebase: {
     apiKey: 'AIzaSyAcDY06uTPWGITASl3Uud4DDVn213RBe90',
     authDomain: 'projeto-folha.firebaseapp.com',
     projectId: 'projeto-folha',
     appId: '1:494657843103:web:5dfc10a0ebe12d5c4797aa',
-  }, */
+  },
 
   /* Tela de perfil e diversidade. Use false para ocultá-la. */
   moduloDiversidade: true,
