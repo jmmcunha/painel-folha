@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
-<meta name="referrer" content="no-referrer">
+<meta name="referrer" content="strict-origin">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src https://identitytoolkit.googleapis.com https://securetoken.googleapis.com; object-src 'none'; frame-src 'none'; base-uri 'self'; form-action 'none'">
 <title>Painel da Folha</title>
 <link rel="icon" href="data:,">
@@ -31,7 +31,7 @@
     <button type="button" class="btn btn-texto so-estreito" id="btn-menu" aria-label="Abrir ou fechar o menu">☰</button>
     <div class="marca"><span id="app-titulo">PAINEL DA FOLHA</span><span id="app-sub" class="mudo"></span></div>
     <div class="appbar-dir">
-      <span id="base-info" class="mudo"></span>
+      <button type="button" id="base-info" class="btn btn-texto mudo btn-p"></button>
       <span id="sem-login" class="etq" hidden title="O login pelo Firebase ainda não foi configurado em js/config.js">Sem login configurado</span>
       <button type="button" class="btn btn-contorno btn-p" id="btn-ocultar" aria-pressed="false" hidden>Ocultar nomes</button>
       <button type="button" class="btn btn-primario btn-p" data-acao="carregar">Atualizar base</button>
