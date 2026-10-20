@@ -80,7 +80,13 @@
     tela.innerHTML = '';
     if (!TITULO[st.tela]) st.tela = 'geral';
     desenhaMenu(temBase);
-    $('base-info').textContent = temBase ? db.comps.length + (db.comps.length === 1 ? ' competência' : ' competências') + ' · ' + F.int(db.fatos.length) + ' linhas' : 'Nenhuma base carregada';
+    const bi = $('base-info');
+    if (temBase) {
+      const ativas = db.cargas.filter(k => k.ativas);
+      const faixa = db.comps.length === 1 ? F.comp(db.comps[0]) : F.comp(db.comps[0]) + ' a ' + F.comp(db.comps[db.comps.length - 1]);
+      bi.textContent = ativas.length + (ativas.length === 1 ? ' arquivo · ' : ' arquivos · ') + faixa + ' · ' + F.int(db.fatos.length) + ' linhas';
+      bi.title = 'Base atual: ' + ativas.map(k => k.nome).join(', ') + '. Clique para ver os detalhes.';
+    } else { bi.textContent = 'Nenhuma base carregada'; bi.title = ''; }
     const bo = $('btn-ocultar');
     bo.setAttribute('aria-pressed', String(st.ocultar));
     bo.textContent = st.ocultar ? 'Mostrar nomes' : 'Ocultar nomes';
@@ -100,27 +106,58 @@
     if (foco) { const e = $(foco); if (e && e !== document.activeElement) e.focus(); }
   };
 
+  /* Com uma base já carregada, pergunta se os arquivos novos a substituem ou se somam a ela. */
+  function perguntarModo(arqs) {
+    return new Promise(resolve => {
+      const db = PF.db;
+      const lista = arqs.map(a => a.name);
+      const d = PF.h('<div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-t"><div class="modal-cx">' +
+        '<h3 id="modal-t">Já existe uma base carregada</h3>' +
+        '<p class="mudo">A base atual tem ' + db.cargas.filter(k => k.ativas).length + ' arquivo(s), ' + db.comps.length + ' competência(s) e ' + F.int(db.fatos.length) + ' linhas. O que fazer com ' + (lista.length === 1 ? 'o arquivo' : 'os ' + lista.length + ' arquivos') + ' selecionado(s)?</p>' +
+        '<ul class="lista mono" id="modal-arqs"></ul>' +
+        '<div class="modal-op"><button type="button" class="btn btn-primario" data-modo="substituir">Substituir a base</button><p class="mudo">Descarta tudo o que está carregado e usa só os arquivos novos. É o uso normal quando se abre outro conjunto de dados.</p></div>' +
+        '<div class="modal-op"><button type="button" class="btn btn-contorno" data-modo="acrescentar">Acrescentar à base atual</button><p class="mudo">Soma os meses novos aos já carregados. Um mês que já exista é trocado pelo do arquivo novo.</p></div>' +
+        '<p><button type="button" class="btn btn-texto" data-modo="">Cancelar</button></p></div></div>');
+      lista.slice(0, 8).forEach(n => { const li = document.createElement('li'); li.textContent = n; d.querySelector('#modal-arqs').appendChild(li); });
+      if (lista.length > 8) { const li = document.createElement('li'); li.textContent = '… e mais ' + (lista.length - 8); d.querySelector('#modal-arqs').appendChild(li); }
+      d.addEventListener('click', e => { const b = e.target.closest('[data-modo]'); if (!b) return; d.remove(); resolve(b.dataset.modo || null); });
+      d.addEventListener('keydown', e => { if (e.key === 'Escape') { d.remove(); resolve(null); } });
+      document.body.appendChild(d);
+      d.querySelector('[data-modo="substituir"]').focus();
+    });
+  }
+  function limparFiltros() { st.tf = st.dir = st.coord = st.superv = st.vinc = st.sit = '*'; st.ficha = null; st.rubSel = null; st.busca = ''; st.exp = null; }
+
   async function carregarArquivos(lista) {
     const arqs = [...lista].sort((a, b) => a.name.localeCompare(b.name, 'pt-BR', { numeric: true }));
+    $('arquivos').value = '';
     if (!arqs.length) return;
-    const antes = PF.db.fatos.length === 0;
-    let ok = 0, linhas = 0;
-    const erros = [];
+    const vazia = PF.db.fatos.length === 0;
+    let modo = 'substituir';
+    if (!vazia) { modo = await perguntarModo(arqs); if (!modo) return; }
+    if (modo === 'substituir' && !vazia) { PF.limparBase(); limparFiltros(); }
+    let ok = 0, linhas = 0, ultima = null;
+    const erros = [], avisos = [];
     for (const f of arqs) {
       await PF.ocupado('Lendo ' + f.name + '…');
       try {
         const r = await PF.carregar(f);
-        if (r.ok) { ok++; linhas += r.lidas; } else erros.push(r.msg);
+        if (!r.ok) { erros.push(r.msg); continue; }
+        ok++; linhas += r.lidas;
+        const fim = r.comps[r.comps.length - 1];
+        if (!ultima || fim > ultima) ultima = fim;
+        r.substituiu.forEach(s => avisos.push(f.name + ' substituiu ' + F.comp(s.c) + ' (' + s.tf + '), que vinha de ' + s.de.join(', ') + '.'));
       } catch (e) { console.error(e); erros.push('"' + f.name + '": ' + e.message); }
     }
     await PF.ocupado('Organizando a base…');
     PF.reindexar();
-    if (ok && PF.db.comps.length) st.comp = PF.db.comps[PF.db.comps.length - 1];
+    /* a tela vai para o mês mais recente do que acabou de ser carregado, não da base inteira */
+    if (ok && ultima && PF.db.porComp.has(ultima)) st.comp = ultima;
     PF.ocupado(null);
-    if (ok) PF.toast(ok + (ok === 1 ? ' arquivo carregado: ' : ' arquivos carregados: ') + F.int(linhas) + ' linhas.');
+    if (ok) PF.toast(ok + (ok === 1 ? ' arquivo carregado: ' : ' arquivos carregados: ') + F.int(linhas) + ' linhas' + (modo === 'substituir' && !vazia ? '. A base anterior foi descartada.' : '.'));
+    avisos.forEach(m => PF.toast(m, 'aviso'));
     erros.forEach(m => PF.toast(m, 'erro'));
-    $('arquivos').value = '';
-    if (ok && antes) PF.ir('geral'); else PF.render();
+    if (ok && (vazia || modo === 'substituir')) PF.ir('geral'); else PF.render();
   }
 
   function iniciar(usuario) {
@@ -132,6 +169,7 @@
     if (usuario) { $('usuario-email').textContent = usuario.email || ''; u.hidden = false; $('btn-sair').addEventListener('click', () => PF.sair()); }
     else { $('sem-login').hidden = false; }
     $('btn-ocultar').addEventListener('click', () => { st.ocultar = !st.ocultar; PF.render(); });
+    $('base-info').addEventListener('click', () => { if (PF.db.fatos.length) { st.ficha = null; st.rubSel = null; PF.ir('base'); } });
     $('btn-menu').addEventListener('click', () => document.body.classList.toggle('menu-aberto'));
     $('arquivos').addEventListener('change', e => carregarArquivos(e.target.files));
     document.addEventListener('click', e => { if (e.target.closest('[data-acao="carregar"]')) $('arquivos').click(); });

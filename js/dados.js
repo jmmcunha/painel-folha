@@ -219,15 +219,27 @@
     const nomes = new Map();
     snaps.forEach(s => { if (!s.nome) return; const a = nomes.get(s.mat); if (a == null) nomes.set(s.mat, s.nome); else if (PF.norm(a) !== PF.norm(s.nome)) prob('Matrícula com mais de um nome', s.mat); });
 
+    /* meses e tipos de folha que já existiam na base e serão substituídos, com o arquivo de origem */
+    const nomeCarga = new Map(db.cargas.map(k => [k.id, k.nome]));
+    const subst = new Map();
+    for (const f of db.fatos) {
+      const p = f.c + '|' + f.tf;
+      if (!pares.has(p)) continue;
+      let s = subst.get(p);
+      if (!s) subst.set(p, (s = { c: f.c, tf: f.tf, n: 0, de: new Set() }));
+      s.n++; s.de.add(nomeCarga.get(f.k));
+    }
     const antes = db.fatos.length;
     db.fatos = db.fatos.filter(f => !pares.has(f.c + '|' + f.tf));
     const substituidas = antes - db.fatos.length;
     for (const f of fatos) db.fatos.push(f);
+    const compsOrd = [...comps].sort();
+    const substituiu = [...subst.values()].map(s => Object.assign(s, { de: [...s.de] }));
     db.cargas.push({
-      id, nome: file.name, hash, aba, quando: new Date(), lidas, ignoradas, substituidas, ativas: lidas,
-      comps: [...comps].sort(), faltam: faltam.map(c => c[1]), extras, probs: [...probs.values()],
+      id, nome: file.name, hash, aba, quando: new Date(), lidas, ignoradas, substituidas, substituiu, ativas: lidas,
+      comps: compsOrd, faltam: faltam.map(c => c[1]), extras, probs: [...probs.values()],
     });
-    return { ok: true, lidas, ignoradas, substituidas, comps: comps.size };
+    return { ok: true, lidas, ignoradas, substituidas, substituiu, comps: compsOrd };
   };
 
   /* Recalcula tudo o que deriva dos fatos. Chamar depois de cargas e de ajustes no dicionário. */

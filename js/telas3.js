@@ -204,7 +204,7 @@
   /* ================= BASE E CONFERÊNCIA ================= */
   PF.zonaCarga = function (host, vazia) {
     const z = PF.h('<div class="zona' + (vazia ? ' zona-g' : '') + '"><p class="zona-t"></p><p class="mudo"></p><p><button type="button" class="btn btn-primario" data-acao="carregar">Escolher arquivos</button></p></div>');
-    z.querySelector('.zona-t').textContent = vazia ? 'Carregue a base da folha' : 'Adicionar ou atualizar meses';
+    z.querySelector('.zona-t').textContent = vazia ? 'Carregue a base da folha' : 'Carregar outros arquivos';
     z.querySelector('.mudo').textContent = 'Arraste aqui um ou mais arquivos .xlsx ou .csv no leiaute da folha, ou escolha no computador. Cada arquivo pode trazer um ou vários meses. Os dados são processados neste navegador e não são enviados a nenhum servidor.';
     host.appendChild(z);
     return z;
@@ -227,7 +227,16 @@
   };
   T.base = function (el) {
     const st = PF.st, db = PF.db;
-    const c0 = PF.cartao(el, 'Arquivos carregados', F.int(db.fatos.length) + ' linhas ativas em ' + db.comps.length + (db.comps.length === 1 ? ' competência' : ' competências') + '. Nada fica gravado: ao fechar ou recarregar a página, a base é descartada.');
+    const ativas = db.cargas.filter(k => k.ativas), inativas = db.cargas.filter(k => !k.ativas);
+    const c0 = PF.cartao(el, 'Base atual', ativas.length + (ativas.length === 1 ? ' arquivo, ' : ' arquivos, ') + db.comps.length + (db.comps.length === 1 ? ' competência' : ' competências') + ' e ' + F.int(db.fatos.length) + ' linhas. Nada fica gravado: ao fechar ou recarregar a página, a base é descartada.');
+    const comp = PF.h('<ul class="lista"></ul>');
+    ativas.forEach(k => { const li = document.createElement('li'); li.textContent = k.nome + ': ' + (k.comps.length === 1 ? F.comp(k.comps[0]) : F.comp(k.comps[0]) + ' a ' + F.comp(k.comps[k.comps.length - 1]) + ' (' + k.comps.length + ' competências)') + ', ' + F.int(k.ativas) + ' linhas em uso' + (k.ativas < k.lidas ? ' de ' + F.int(k.lidas) + ' lidas' : ''); comp.appendChild(li); });
+    c0.corpo.appendChild(comp);
+    const trocas = [];
+    db.cargas.forEach(k => (k.substituiu || []).forEach(s => trocas.push(k.nome + ' substituiu ' + F.comp(s.c) + ' (' + s.tf + '), ' + F.int(s.n) + ' linhas que vinham de ' + s.de.join(', ') + '.')));
+    if (trocas.length) PF.aviso(c0.corpo, 'Substituições nesta sessão: ' + trocas.join(' '), 'nota');
+    if (inativas.length) PF.aviso(c0.corpo, 'Fora de uso, porque todos os seus meses foram substituídos: ' + inativas.map(k => k.nome).join(', ') + '.', 'nota');
+    PF.aviso(c0.corpo, 'Ao carregar outros arquivos com uma base aberta, o painel pergunta se eles substituem a base ou se somam a ela. Para trocar de conjunto de dados, escolha substituir.', 'nota');
     PF.zonaCarga(c0.corpo, false);
     PF.tabela(c0.corpo, {
       cols: [
